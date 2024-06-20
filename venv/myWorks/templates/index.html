@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Chat Rooms</title>
+</head>
+<body>
+    <h1>Enter your name and select an option</h1>
+    <form action="/room" method="post">
+        <label for="username">Name:</label>
+        <input type="text" id="username" name="username" value="{{ session['username'] }}" readonly>
+        <br><br>
+        <button type="submit" name="action" value="create">Create Room</button>
+        <br><br>
+        <label for="room_code">Room Code (for joining):</label>
+        <input type="text" id="room_code" name="room_code">
+        <button type="submit" name="action" value="join">Join Room</button>
+    </form>
+    <br>
+    <a href="/logout">Logout</a>
+</body>
+</html>
