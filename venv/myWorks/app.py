@@ -80,8 +80,8 @@ def room():
             'word': selected_word,
             'game_over': False,
             'winner': None,
-            'start_time': None,  # Initialize start time as None
-            'countdown_seconds': 15 * 60  # Countdown time in seconds (15 minutes)
+            'start_time': None,
+            'countdown_seconds': 15 * 60
         }
         return redirect(url_for('chat', room_code=room_code, username=username))
     elif action == 'join':
@@ -89,7 +89,9 @@ def room():
         if room_code in rooms and len(rooms[room_code]['users']) < 2:
             rooms[room_code]['users'].append(username)
             if len(rooms[room_code]['users']) == 2:
-                rooms[room_code]['start_time'] = datetime.now()  # Start the timer when both users join
+                rooms[room_code]['start_time'] = datetime.now()
+                word_to_reveal = rooms[room_code]['word']
+                socketio.emit('reveal_word', {'word': word_to_reveal}, room=room_code)
             return redirect(url_for('chat', room_code=room_code, username=username))
         else:
             return "Room is full or doesn't exist", 400
@@ -109,6 +111,8 @@ def handle_join(data):
     join_room(room)
     send(f"{username} has entered the room.", to=room)
     if room in rooms and len(rooms[room]['users']) == 2 and rooms[room]['start_time'] is not None:
+        word_to_reveal = rooms[room]['word']
+        socketio.emit('reveal_word', {'word': word_to_reveal}, room=room)
         countdown_seconds = rooms[room].get('countdown_seconds', 0)
         start_time = rooms[room]['start_time']
         elapsed_time = (datetime.now() - start_time).total_seconds()
@@ -117,21 +121,20 @@ def handle_join(data):
             socketio.emit('start_timer', {'countdown_seconds': int(remaining_seconds)}, room=room)
         else:
             socketio.emit('time_out', {}, room=room)
-            del rooms[room]  # Remove room from dictionary on timeout
+            del rooms[room]
 
 @socketio.on('message')
 def handle_message(data):
     room = data['room']
     username = data['username']
     message = data['message']
-    sender_sid = request.sid  # Get sender's session ID
+    sender_sid = request.sid
 
     if message.strip().lower() == rooms[room]['word'].lower() and not rooms[room]['game_over']:
         rooms[room]['game_over'] = True
-        rooms[room]['winner'] = username  # Set the winner's username
+        rooms[room]['winner'] = username
         socketio.emit('game_over', {'message': f'Game Over! {username} won!'}, room=room)
         socketio.emit('word_guessed', {'result': 'correct'}, room=sender_sid)
-        # Emit redirect_home event to both clients
         socketio.emit('redirect_home', {}, room=room)
     else:
         socketio.emit('word_guessed', {'result': 'incorrect'}, room=sender_sid)
