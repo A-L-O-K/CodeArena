@@ -34,7 +34,7 @@
 
             socket.on('reveal_word', function(data) {
                 var word = data['word'];
-                document.getElementById('word').textContent = 'Word to guess: ' + word;
+                document.getElementById('word').textContent = 'Question: ' + word;
             });
 
             function startCountdown(totalSeconds) {
@@ -76,6 +76,9 @@
 
             socket.on('game_over', function(data) {
                 alert(data['message']);
+                setTimeout(function() {
+                    window.location.href = '/';
+                }, 3000); // Wait 3 seconds before redirecting
             });
 
             socket.on('redirect_home', function() {

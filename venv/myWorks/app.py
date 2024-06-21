@@ -139,5 +139,6 @@ def handle_message(data):
     else:
         socketio.emit('word_guessed', {'result': 'incorrect'}, room=sender_sid)
 
+
 if __name__ == '__main__':
     socketio.run(app, debug=True)
