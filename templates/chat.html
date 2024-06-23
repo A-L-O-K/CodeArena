@@ -35,7 +35,7 @@
 
             socket.on('reveal_word', function(data) {
                 var word = data['word'];
-                document.getElementById('word').textContent = 'Question: ' + word;
+                document.getElementById('word').textContent = '' + word;
             });
 
             function startCountdown(totalSeconds) {
