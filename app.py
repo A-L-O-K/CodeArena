@@ -1,7 +1,7 @@
 from flask import Flask, render_template, request, redirect, url_for, session
-from flask_socketio import SocketIO, join_room, leave_room, send, emit
-from flask_sqlalchemy import SQLAlchemy
-from models import db, User
+from flask_socketio import SocketIO, join_room, send
+# from flask_sqlalchemy import SQLAlchemy
+# from models import db, User
 import random
 import string
 from datetime import datetime, timedelta
@@ -9,9 +9,9 @@ import psycopg2
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'your_secret_key'
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///site.db'
-app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-db.init_app(app)
+# app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///site.db'
+# app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+# db.init_app(app)
 socketio = SocketIO(app)
 
 conn = psycopg2.connect(database="code_arena", user="postgres", 
@@ -20,7 +20,8 @@ conn = psycopg2.connect(database="code_arena", user="postgres",
 cur = conn.cursor()
 
 with app.app_context():
-    db.create_all()
+    # db.create_all()
+    pass
 
 rooms = {}
 words = {}
