@@ -6,6 +6,8 @@ import random
 import string
 from datetime import datetime, timedelta
 import psycopg2 
+import os
+from dotenv import load_dotenv
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'your_secret_key'
@@ -14,8 +16,21 @@ app.config['SECRET_KEY'] = 'your_secret_key'
 # db.init_app(app)
 socketio = SocketIO(app)
 
-conn = psycopg2.connect(database="code_arena", user="postgres", 
-                        password="icandoit", host="localhost", port="5432") 
+load_dotenv()
+
+database = os.getenv("DB_NAME")
+user = os.getenv("DB_USER")
+password = os.getenv("DB_PASSWORD")
+host = os.getenv("DB_HOST")
+port = os.getenv("DB_PORT")
+
+conn = psycopg2.connect(
+    database=database,
+    user=user,
+    password=password,
+    host=host,
+    port=port
+)
 
 cur = conn.cursor()
 
