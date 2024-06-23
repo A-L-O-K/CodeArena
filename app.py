@@ -19,16 +19,21 @@ conn = psycopg2.connect(database="code_arena", user="postgres",
 
 cur = conn.cursor()
 
-with app.app_context():
-    # db.create_all()
-    pass
+def select_random_function():
+    cur.execute("select question_id from questions")
+    lis = list(cur)
+    question_id = random.choice(lis)[0]
+    cur.execute(f"select description from questions where question_id = {question_id}")
+    for i in cur:
+        return i[0]
+
 
 rooms = {}
-words = {}
+# words = {}
 
 # Load words from file into a dictionary for quick access
-with open('words.txt', 'r') as file:
-    words = {line.strip().lower(): line.strip() for line in file}
+# with open('words.txt', 'r') as file:
+#     words = {line.strip().lower(): line.strip() for line in file}
 
 def generate_room_code():
     return ''.join(random.choices(string.ascii_uppercase + string.digits, k=6))
@@ -117,7 +122,8 @@ def room():
     action = request.form['action']
     if action == 'create':
         room_code = generate_room_code()
-        selected_word = random.choice(list(words.values()))
+        # selected_word = random.choice(list(words.values()))
+        selected_word = select_random_function()
         rooms[room_code] = {
             'users': [username],
             'word': selected_word,
