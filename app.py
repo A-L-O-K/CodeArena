@@ -1,19 +1,14 @@
 from flask import Flask, render_template, request, redirect, url_for, session
-from flask_socketio import SocketIO, join_room, send
-# from flask_sqlalchemy import SQLAlchemy
-# from models import db, User
+from flask_socketio import SocketIO, join_room, leave_room, send, emit
 import random
 import string
 from datetime import datetime, timedelta
-import psycopg2 
+import psycopg2
 import os
 from dotenv import load_dotenv
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'your_secret_key'
-# app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///site.db'
-# app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-# db.init_app(app)
 socketio = SocketIO(app)
 
 load_dotenv()
@@ -42,13 +37,7 @@ def select_random_function():
     for i in cur:
         return i[0]
 
-
 rooms = {}
-# words = {}
-
-# Load words from file into a dictionary for quick access
-# with open('words.txt', 'r') as file:
-#     words = {line.strip().lower(): line.strip() for line in file}
 
 def generate_room_code():
     return ''.join(random.choices(string.ascii_uppercase + string.digits, k=6))
@@ -64,27 +53,14 @@ def login():
     if request.method == 'POST':
         email = request.form['email']
         password = request.form['password']
-
-
         cur.execute(f"select username, password from players where email = '{email}'")
-
         dataFromBase = list(cur)
-
         if dataFromBase:
             if dataFromBase[0][1] == password: # [0][1] is password
                 session['username'] = dataFromBase[0][0] # [0][0] is username
                 return redirect(url_for('index'))
         else:
             return 'Invalid credentials', 400
-        
-
-
-        # user = User.query.filter_by(email=email).first()
-        # if user and user.check_password(password):
-        #     session['username'] = user.username
-        #     return redirect(url_for('index'))
-        # else:
-        #     return 'Invalid credentials', 400
     return render_template('login.html')
 
 @app.route('/signup', methods=['GET', 'POST'])
@@ -93,35 +69,14 @@ def signup():
         username = request.form['username']
         email = request.form['email']
         password = request.form['password']
-
-
         cur.execute(f"select email from players where email = '{email}'")
-
         dataFromBase = list(cur)
-
         if dataFromBase:
             return 'Email already registered', 400
         else:
-            # user = User(username=username, email=email)
-            # user.set_password(password)
-            # db.session.add(user)
-            # db.session.commit()
-
             cur.execute(f"INSERT INTO players (username, email, password, wins_count) VALUES ('{username}', '{email}', '{password}', {0})")
             conn.commit()
-            
             return redirect(url_for('login'))
-
-
-
-        # if User.query.filter_by(email=email).first() is None:
-        #     user = User(username=username, email=email)
-        #     user.set_password(password)
-        #     db.session.add(user)
-        #     db.session.commit()
-        #     return redirect(url_for('login'))
-        # else:
-        #     return 'Email already registered', 400
     return render_template('signup.html')
 
 @app.route('/logout')
@@ -137,7 +92,6 @@ def room():
     action = request.form['action']
     if action == 'create':
         room_code = generate_room_code()
-        # selected_word = random.choice(list(words.values()))
         selected_word = select_random_function()
         rooms[room_code] = {
             'users': [username],
@@ -203,6 +157,20 @@ def handle_message(data):
     else:
         socketio.emit('word_guessed', {'result': 'incorrect'}, room=sender_sid)
 
+@socketio.on('leave')
+def handle_leave(data):
+    username = data['username']
+    room = data['room']
+    leave_room(room)
+    if room in rooms:
+        if username in rooms[room]['users']:
+            rooms[room]['users'].remove(username)
+        if len(rooms[room]['users']) == 0:
+            del rooms[room]
+        else:
+            rooms[room]['game_over'] = True
+            socketio.emit('player_left', {}, room=room)
+            socketio.emit('redirect_home', {}, room=room)
 
 if __name__ == '__main__':
     socketio.run(app, debug=True)

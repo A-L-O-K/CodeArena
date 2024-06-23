@@ -19,6 +19,13 @@
                 document.getElementById('message').value = '';
             };
 
+            document.getElementById('exit').onclick = function() {
+                if (confirm("Are you sure you want to exit the room?")) {
+                    socket.emit('leave', {'username': username, 'room': room});
+                    window.location.href = '/'; // Redirect to home page
+                }
+            };
+
             socket.on('connect', function() {
                 console.log('Connected with session ID:', socket.id);
             });
@@ -85,6 +92,11 @@
             socket.on('redirect_home', function() {
                 window.location.href = '/';
             });
+
+            socket.on('player_left', function() {
+                alert('The other player left the game. The game is over. Nobody won.');
+                window.location.href = '/';
+            });
         });
     </script>
     <style>
@@ -113,7 +125,7 @@
             padding: 10px;
             box-sizing: border-box;
         }
-        #send {
+        #send, #exit {
             margin-top: 10px;
         }
         #word {
@@ -135,6 +147,7 @@
         <div id="code-container">
             <textarea id="message" placeholder="Type your message or code"></textarea>
             <button id="send">Send</button>
+            <button id="exit">Exit Room</button>
         </div>
     </div>
     <a href="/" style="position: absolute; bottom: 10px; left: 10px;">Back to Home</a>
