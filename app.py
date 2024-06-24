@@ -148,9 +148,21 @@ def handle_message(data):
     message = data['message']
     sender_sid = request.sid
 
+    # ------------- Check the answer key
+    
+    
+
+
     if message.strip().lower() == rooms[room]['word'].lower() and not rooms[room]['game_over']:
         rooms[room]['game_over'] = True
         rooms[room]['winner'] = username
+
+        #--------- Update the win count of the winner in player table
+
+        # cur.execute("")
+
+        #--------- Add the competetion details to the competition table
+
         socketio.emit('game_over', {'message': f'Game Over! {username} won!'}, room=room)
         socketio.emit('word_guessed', {'result': 'correct'}, room=sender_sid)
         socketio.emit('redirect_home', {}, room=room)
