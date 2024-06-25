@@ -195,7 +195,22 @@ def handle_message(data):
     room = data['room']
     username = data['username']
     message = data['message']
+    language = data['language']
     sender_sid = request.sid
+
+    cur.execute(f"select player_id from players where username = '{username}'")
+    user_id = list(cur)[0][0]
+
+    competition_id = rooms[room]['competition_id']
+
+    # ---- insert data into code submission
+
+    cur.execute("""
+        INSERT INTO code_submission (user_id, competition_id, code, language)
+        VALUES (%s, %s, %s, %s);
+    """, (user_id, competition_id, message, language))
+
+    conn.commit()
 
     # ------------- Check the answer key
     
@@ -218,15 +233,15 @@ def handle_message(data):
         end_time = datetime.now()
 
 
-        cur.execute(f"select player_id from players where username = '{username}'")
-        winner_id = list(cur)[0][0]
+        # cur.execute(f"select player_id from players where username = '{username}'")
+        # winner_id = list(cur)[0][0]
 
         # ----------------
-        competition_id = rooms[room]['competition_id']
+        
 
         cur.execute("""
                 UPDATE competition SET end_time = %s, winner_id = %s WHERE competition_id = %s
-        """, (end_time, winner_id, competition_id))
+        """, (end_time, user_id, competition_id))
         
 
         # saving the changes
@@ -243,6 +258,17 @@ def handle_leave(data):
     username = data['username']
     room = data['room']
     leave_room(room)
+
+    end_time = datetime.now()
+    competition_id = rooms[room]['competition_id']
+
+    cur.execute("""
+                UPDATE competition SET end_time = %s WHERE competition_id = %s
+        """, (end_time,  competition_id))
+
+    # saving the changes
+    conn.commit()
+
     if room in rooms:
         if username in rooms[room]['users']:
             rooms[room]['users'].remove(username)
