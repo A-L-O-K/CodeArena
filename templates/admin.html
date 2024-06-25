@@ -25,7 +25,7 @@
                 var code = document.getElementById('code').value;
 
 
-                console.log(username);
+                // console.log(username);
 
                 socket.emit('admin-add-question', 
                 {
@@ -36,6 +36,8 @@
                     'language':language, 
                     'code':code
                 });
+
+                alert('The question and solution have been added to the database!');
             };
 
             socket.on('redirect_home', function() {

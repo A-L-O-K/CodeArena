@@ -50,6 +50,55 @@ def select_random_function():
     for i in cur:
         return i[0]
 
+def add_question_answer(title, description, difficulty, user_id, language, code):
+        try:
+
+            # preprocessing to avoid possible problems.. :)
+            description = description.replace("'", "`")
+            description = description.replace('"', "`")
+            
+            # Start transaction
+            # conn.autocommit = False
+            
+            # Step 1: Insert into questions and get the question_id
+            insert_question_query = """
+                INSERT INTO questions (title, description, difficulty, solution_id, user_id) 
+                VALUES (%s, %s, %s, %s, %s)
+                RETURNING question_id;
+            """
+            cur.execute(insert_question_query, (f'{title}', f'{description}', difficulty, 0, user_id))
+            
+            question_id = cur.fetchone()[0]
+
+            # Step 2: Insert into solutions using the retrieved question_id
+            insert_solution_query = """
+                INSERT INTO solutions (language, code, question_id) 
+                VALUES (%s, %s, %s)
+                RETURNING solution_id;
+            """
+            cur.execute(insert_solution_query, (f'{language}', f'{code}', question_id))
+            solution_id = cur.fetchone()[0]
+
+            # Step 3: Update questions to set the solution_id
+            update_question_query = """
+                UPDATE questions 
+                SET solution_id = %s 
+                WHERE question_id = %s;
+            """
+            cur.execute(update_question_query, (solution_id, question_id))
+
+            # Commit the transaction
+            conn.commit()
+            print("Data inserted into solutions table successfully!")
+
+        except Exception as e:
+            # If an error occurs, rollback the transaction
+            conn.rollback()
+            print("-"*50)
+            print("An error occurred:", e)
+            print("-"*50)
+
+
 rooms = {}
 
 def generate_room_code():
@@ -64,7 +113,7 @@ def index():
 @app.route('/admin')
 def admin():
     if 'username' in session:
-        return render_template('admin.html')
+        return render_template('admin.html', username=session['username'])
     return redirect(url_for('login'))
 
 @app.route('/login', methods=['GET', 'POST'])
@@ -72,25 +121,25 @@ def login():
     if request.method == 'POST':
         email = request.form['email']
         password = request.form['password']
-        cur.execute(f"select username, password from players where email = '{email}'")
-        dataFromBase = list(cur)
-        if dataFromBase:
-            if dataFromBase[0][1] == password: # [0][1] is password
-                session['username'] = dataFromBase[0][0] # [0][0] is username
-                return redirect(url_for('index'))
-        else:
 
-            cur.execute(f"select username, password from admins where email = '{email}'")
-            dataFromBase = list(cur)
-            if dataFromBase:
-                if dataFromBase[0][1] == password: # [0][1] is password
-                    session['username'] = dataFromBase[0][0] # [0][0] is username
-                    return redirect(url_for('admin'))
+        # Check in players table
+        cur.execute(f"SELECT username, password FROM players WHERE email = '{email}'")
+        dataFromBase = cur.fetchone()  # Assuming only one result is expected
+        if dataFromBase and dataFromBase[1] == password:
+            session['username'] = dataFromBase[0]
+            return redirect(url_for('index'))
 
+        # If not found in players, check admins table
+        cur.execute(f"SELECT username, password FROM admins WHERE email = '{email}'")
+        dataFromBase = cur.fetchone()  # Assuming only one result is expected
+        if dataFromBase and dataFromBase[1] == password:
+            session['username'] = dataFromBase[0]
+            return redirect(url_for('admin'))
 
+        return 'Invalid credentials', 400
 
-            return 'Invalid credentials', 400
     return render_template('login.html')
+
 
 @app.route('/signup', methods=['GET', 'POST'])
 def signup():
@@ -297,8 +346,24 @@ def handle_leave(data):
 
 @socketio.on('admin-add-question')
 def admin_add_question(data):
-    print("-"*50)
-    print(data)
+    # print("-"*50)
+    # print(data)
 
+    title = data['title']
+    description = data['description']
+    difficulty = int(data['difficulty'])
+    language = data['language']
+    code = data['code']
+
+    username = data['username']
+    cur.execute("SELECT admin_id FROM admins WHERE username = %s", (username,))
+    user_id = cur.fetchone()[0]
+
+    
+
+    add_question_answer(title, description, difficulty, user_id, language, code)
+
+
+    
 if __name__ == '__main__':
     socketio.run(app, debug=True)
