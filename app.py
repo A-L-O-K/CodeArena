@@ -56,6 +56,9 @@ def add_question_answer(title, description, difficulty, user_id, language, code)
             # preprocessing to avoid possible problems.. :)
             description = description.replace("'", "`")
             description = description.replace('"', "`")
+
+            code = code.strip()
+            code = code.replace("\n", "")
             
             # Start transaction
             # conn.autocommit = False
@@ -280,8 +283,9 @@ def handle_message(data):
     # ------------- Check the answer key
     
     question = rooms[room]['word']
-    userAnswer = message.strip().lower()
-    realanswer = get_answer(question).strip().lower()
+    userAnswer = message.strip()
+    userAnswer = userAnswer.replace("\n", "")
+    realanswer = get_answer(question)
 
 
     # if message.strip().lower() == rooms[room]['word'].lower() and not rooms[room]['game_over']:

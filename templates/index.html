@@ -2,20 +2,100 @@
 <html>
 <head>
     <title>Chat Rooms</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f0f0f0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+
+        .container {
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            width: 400px;
+            text-align: center;
+        }
+
+        h1 {
+            color: #333;
+            margin-bottom: 20px;
+        }
+
+        form {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        label {
+            color: #666;
+        }
+
+        input[type="text"] {
+            padding: 10px;
+            margin-bottom: 15px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            font-size: 16px;
+            width: 100%;
+            box-sizing: border-box;
+        }
+
+        button[type="submit"] {
+            background-color: #3498db;
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            text-align: center;
+            text-decoration: none;
+            display: inline-block;
+            font-size: 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-top: 10px;
+            transition: background-color 0.3s;
+            width: 100%;
+            box-sizing: border-box;
+        }
+
+        button[type="submit"]:hover {
+            background-color: #2980b9;
+        }
+
+        a {
+            display: block;
+            margin-top: 20px;
+            text-decoration: none;
+            color: #666;
+            text-align: center;
+        }
+
+        a:hover {
+            color: #333;
+        }
+    </style>
 </head>
 <body>
-    <h1>Enter your name and select an option</h1>
-    <form action="/room" method="post">
-        <label for="username">Name:</label>
-        <input type="text" id="username" name="username" value="{{ session['username'] }}" readonly>
-        <br><br>
-        <button type="submit" name="action" value="create">Create Room</button>
-        <br><br>
-        <label for="room_code">Room Code (for joining):</label>
-        <input type="text" id="room_code" name="room_code">
-        <button type="submit" name="action" value="join">Join Room</button>
-    </form>
-    <br>
-    <a href="/logout">Logout</a>
+    <div class="container">
+        <h1>Enter your name and select an option</h1>
+        <form action="/room" method="post">
+            <label for="username">Name:</label>
+            <input type="text" id="username" name="username" value="{{ session['username'] }}" readonly>
+            <br><br>
+            <button type="submit" name="action" value="create">Create Room</button>
+            <br><br>
+            <label for="room_code">Room Code (for joining):</label>
+            <input type="text" id="room_code" name="room_code">
+            <button type="submit" name="action" value="join">Join Room</button>
+        </form>
+        <br>
+        <a href="/logout">Logout</a>
+    </div>
 </body>
 </html>
