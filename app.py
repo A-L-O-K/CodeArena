@@ -61,6 +61,12 @@ def index():
         return render_template('index.html')
     return redirect(url_for('login'))
 
+@app.route('/admin')
+def admin():
+    if 'username' in session:
+        return render_template('admin.html')
+    return redirect(url_for('login'))
+
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     if request.method == 'POST':
@@ -73,6 +79,16 @@ def login():
                 session['username'] = dataFromBase[0][0] # [0][0] is username
                 return redirect(url_for('index'))
         else:
+
+            cur.execute(f"select username, password from admins where email = '{email}'")
+            dataFromBase = list(cur)
+            if dataFromBase:
+                if dataFromBase[0][1] == password: # [0][1] is password
+                    session['username'] = dataFromBase[0][0] # [0][0] is username
+                    return redirect(url_for('admin'))
+
+
+
             return 'Invalid credentials', 400
     return render_template('login.html')
 
@@ -278,6 +294,11 @@ def handle_leave(data):
             rooms[room]['game_over'] = True
             socketio.emit('player_left', {}, room=room)
             socketio.emit('redirect_home', {}, room=room)
+
+@socketio.on('admin-add-question')
+def admin_add_question(data):
+    print("-"*50)
+    print(data)
 
 if __name__ == '__main__':
     socketio.run(app, debug=True)
