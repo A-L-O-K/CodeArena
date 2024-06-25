@@ -15,7 +15,8 @@
 
             document.getElementById('send').onclick = function() {
                 var message = document.getElementById('message').value;
-                socket.emit('message', {'username': username, 'message': message, 'room': room});
+                var language = document.getElementById('language').value;
+                socket.emit('message', {'username': username, 'message': message, 'room': room, 'language':language});
                 document.getElementById('message').value = '';
             };
 
@@ -145,6 +146,14 @@
     </div>
     <div id="right-half">
         <div id="code-container">
+            <select id="language">
+                <option value="python">Python</option>
+                <option value="javascript">JavaScript</option>
+                <option value="java">Java</option>
+                <option value="c++">C++</option>
+                <option value="ruby">Ruby</option>
+                <option value="go">Go</option>
+            </select>
             <textarea id="message" placeholder="Type your message or code"></textarea>
             <button id="send">Send</button>
             <button id="exit">Exit Room</button>
