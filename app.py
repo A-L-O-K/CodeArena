@@ -175,9 +175,40 @@ def handle_message(data):
 
         #--------- Update the win count of the winner in player table
 
-        # cur.execute("")
+        cur.execute(f"UPDATE players SET wins_count = wins_count + 1 WHERE username = '{username}';")
 
         #--------- Add the competetion details to the competition table
+
+        start_time = rooms[room]['start_time']
+        end_time = datetime.now()
+
+
+        cur.execute(f"select question_id from questions where description = '{question}'")
+        question_id = list(cur)[0][0]
+
+        cur.execute(f"select player_id from players where username = '{username}'")
+        winner_id = list(cur)[0][0]
+
+        # ----------------
+
+        cur.execute("SELECT player_id FROM players WHERE username = %s", (rooms[room]['users'][0],))
+        participant1_id = cur.fetchone()[0]
+
+        cur.execute("SELECT player_id FROM players WHERE username = %s", (rooms[room]['users'][1],))
+        participant2_id = cur.fetchone()[0]
+
+
+        # ----------------
+
+        # Add the competition details to the competition table
+        cur.execute("""
+            INSERT INTO competition (participant1_id, participant2_id, question_id, start_time, end_time, winner_id)
+            VALUES (%s, %s, %s, %s, %s, %s)
+        """, (participant1_id, participant2_id, question_id, start_time, end_time, winner_id))
+        
+
+        # saving the changes
+        conn.commit()
 
         socketio.emit('game_over', {'message': f'Game Over! {username} won!'}, room=room)
         socketio.emit('word_guessed', {'result': 'correct'}, room=sender_sid)
