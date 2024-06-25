@@ -106,13 +106,20 @@ def room():
     if action == 'create':
         room_code = generate_room_code()
         selected_word = select_random_function()
+
+
+        # ---------- create competition
+
+
+
         rooms[room_code] = {
             'users': [username],
             'word': selected_word,
             'game_over': False,
             'winner': None,
             'start_time': None,
-            'countdown_seconds': 15 * 60
+            'countdown_seconds': 15 * 60,
+            'competition_id': None
         }
         return redirect(url_for('chat', room_code=room_code, username=username))
     elif action == 'join':
@@ -120,8 +127,37 @@ def room():
         if room_code in rooms and len(rooms[room_code]['users']) < 2:
             rooms[room_code]['users'].append(username)
             if len(rooms[room_code]['users']) == 2:
+
                 rooms[room_code]['start_time'] = datetime.now()
                 word_to_reveal = rooms[room_code]['word']
+
+                # --- Competetion table entry when a room is created and somebody join
+
+                start_time = rooms[room_code]['start_time']
+
+                cur.execute(f"select question_id from questions where description = '{word_to_reveal}'")
+                question_id = list(cur)[0][0]
+
+                cur.execute("SELECT player_id FROM players WHERE username = %s", (rooms[room_code]['users'][0],))
+                participant1_id = cur.fetchone()[0]
+
+                cur.execute("SELECT player_id FROM players WHERE username = %s", (rooms[room_code]['users'][1],))
+                participant2_id = cur.fetchone()[0]
+
+
+                cur.execute("""
+                    INSERT INTO competition (participant1_id, participant2_id, question_id, start_time, end_time, winner_id)
+                    VALUES (%s, %s, %s, %s, %s, %s)
+                    RETURNING competition_id;
+                """, (participant1_id, participant2_id, question_id, start_time, start_time, 0))
+                competition_id = cur.fetchone()[0]
+
+                rooms[room_code]['competition_id'] = competition_id
+                
+
+                conn.commit()
+
+
                 socketio.emit('reveal_word', {'word': word_to_reveal}, room=room_code)
             return redirect(url_for('chat', room_code=room_code, username=username))
         else:
@@ -179,32 +215,18 @@ def handle_message(data):
 
         #--------- Add the competetion details to the competition table
 
-        start_time = rooms[room]['start_time']
         end_time = datetime.now()
 
-
-        cur.execute(f"select question_id from questions where description = '{question}'")
-        question_id = list(cur)[0][0]
 
         cur.execute(f"select player_id from players where username = '{username}'")
         winner_id = list(cur)[0][0]
 
         # ----------------
+        competition_id = rooms[room]['competition_id']
 
-        cur.execute("SELECT player_id FROM players WHERE username = %s", (rooms[room]['users'][0],))
-        participant1_id = cur.fetchone()[0]
-
-        cur.execute("SELECT player_id FROM players WHERE username = %s", (rooms[room]['users'][1],))
-        participant2_id = cur.fetchone()[0]
-
-
-        # ----------------
-
-        # Add the competition details to the competition table
         cur.execute("""
-            INSERT INTO competition (participant1_id, participant2_id, question_id, start_time, end_time, winner_id)
-            VALUES (%s, %s, %s, %s, %s, %s)
-        """, (participant1_id, participant2_id, question_id, start_time, end_time, winner_id))
+                UPDATE competition SET end_time = %s, winner_id = %s WHERE competition_id = %s
+        """, (end_time, winner_id, competition_id))
         
 
         # saving the changes
