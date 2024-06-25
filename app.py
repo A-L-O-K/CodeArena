@@ -29,6 +29,19 @@ conn = psycopg2.connect(
 
 cur = conn.cursor()
 
+def get_answer(question):
+    # get answer id
+
+    cur.execute(f"select solution_id from questions where description = '{question}'")
+    sid = list(cur)[0][0]
+
+    # find answer
+    cur.execute(f"select code from solutions where solution_id = '{sid}'")
+    sol = list(cur)[0][0]
+
+    # return solution
+    return sol
+
 def select_random_function():
     cur.execute("select question_id from questions")
     lis = list(cur)
@@ -150,10 +163,13 @@ def handle_message(data):
 
     # ------------- Check the answer key
     
-    
+    question = rooms[room]['word']
+    userAnswer = message.strip().lower()
+    realanswer = get_answer(question).strip().lower()
 
 
-    if message.strip().lower() == rooms[room]['word'].lower() and not rooms[room]['game_over']:
+    # if message.strip().lower() == rooms[room]['word'].lower() and not rooms[room]['game_over']:
+    if userAnswer == realanswer and not rooms[room]['game_over']:
         rooms[room]['game_over'] = True
         rooms[room]['winner'] = username
 
