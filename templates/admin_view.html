@@ -152,8 +152,6 @@
             // socket.emit('join', {'username': username, 'room': room});
             document.getElementById('send').onclick = function() {
 
-                clearFilters();
-
                 // var title = document.getElementById('title').value;
                 // var description = document.getElementById('description').value;
                 // var difficulty = document.getElementById('difficulty').value;
@@ -197,6 +195,8 @@
 
                 socket.on('table_content', function(data) {
                     // console.log(data);
+
+                    clearFilters();
 
                     const details = data.details;
 
