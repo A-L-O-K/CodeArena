@@ -122,7 +122,7 @@ def admin():
 @app.route('/admin_view')
 def admin_view():
     if 'username' in session:
-        return render_template('admin_view.html')
+        return render_template('admin_view.html', username=session['username'])
     return redirect(url_for('admin'))
 
 @app.route('/login', methods=['GET', 'POST'])
@@ -377,8 +377,45 @@ def admin_add_question(data):
 
 @socketio.on('admin-view-questions')
 def admin_view_questions(data):
-    print("-"*50)
-    print(data)
+    # print("-"*50)
+    # print(data)
+
+    question_id = data['question_id']
+    title = data['title'] 
+    difficulty = data['difficulty']
+
+    if question_id or title or difficulty:
+
+        if not question_id:question_id=0
+        if not title:title=""
+        if not difficulty:difficulty=0
+
+        # condition = f"question_id = {question_id} or title like '%{title}%' or difficulty = {difficulty};"
+        condition = f"difficulty = {difficulty};"
+        cur.execute(f"SELECT question_id, title, difficulty from questions WHERE {condition}")
+    
+    else:
+        cur.execute(f"SELECT question_id, title, difficulty from questions")
+        
+    temp = list(cur)
+
+    details = {"details":[]}
+
+    for i in temp:
+        details['details'].append(
+            {
+                'question_id':i[0],
+                'title':i[1],
+                'difficulty':i[2],
+            }
+        )
+
+
+    # print(details)
+
+
+    socketio.emit('table_content', details)
+
 
 
     

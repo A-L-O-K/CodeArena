@@ -122,16 +122,6 @@
             </select>
         </div>
         <div>
-            <label for="language">Language:</label>
-            <select id="language" name="language">
-                <option value="">None</option>
-                <option value="C++">C++</option>
-                <option value="Java">Java</option>
-                <option value="Python">Python</option>
-                <option value="JavaScript">JavaScript</option>
-            </select>
-        </div>
-        <div>
             <button id = "send">Apply</button>
             <button id = "clear">Clear</button>
         </div>
@@ -144,7 +134,6 @@
                     <th>Question ID</th>
                     <th>Title</th>
                     <th>Difficulty</th>
-                    <th>Language</th>
                 </tr>
             </thead>
             <tbody>
@@ -157,10 +146,13 @@
 
 
 
-        document.addEventListener('DOMContentLoaded', function() {  
+        document.addEventListener('DOMContentLoaded', function(data) {  
             var socket = io();
+            var username = "{{ username }}";
             // socket.emit('join', {'username': username, 'room': room});
             document.getElementById('send').onclick = function() {
+
+                clearFilters();
 
                 // var title = document.getElementById('title').value;
                 // var description = document.getElementById('description').value;
@@ -171,7 +163,6 @@
                 var question_id = document.getElementById('question_id').value;
                 var title = document.getElementById('title').value
                 var difficulty = document.getElementById('difficulty').value
-                var language = document.getElementById('language').value
 
 
                 // console.log(username);
@@ -180,18 +171,70 @@
                 {
                     'question_id': question_id,
                     'title':title, 
-                    'description':description, 
                     'difficulty':difficulty, 
-                    'language':language
                 });
+                
+                // question_id = "{{question_id}}"
+                // title = "{{title}}"
+                // difficulty = "{{difficulty}}"
+
+                // const tableBody = document.getElementById('resultsTable').getElementsByTagName('tbody')[0];
+                // const newRow = tableBody.insertRow();
+
+                // const questionIdCell = newRow.insertCell(0);
+                // const titleCell = newRow.insertCell(1);
+                // const difficultyCell = newRow.insertCell(2);
+
+                // questionIdCell.innerHTML = question_id || 'None';
+                // titleCell.innerHTML = title || 'None';
+                // difficultyCell.innerHTML = difficulty || 'None';
+                
+
+                // console.log("Pressed Appyl");
+                // console.log(question_id, title, difficulty)
+
+                // console.log(details);
+
+                socket.on('table_content', function(data) {
+                    // console.log(data);
+
+                    const details = data.details;
+
+                    // Get a reference to the table body where you want to insert rows
+                    const tableBody = document.getElementById('resultsTable').getElementsByTagName('tbody')[0];
+
+                    // Iterate over each object in the details array
+                    details.forEach(function(item) {
+                        // Create a new row
+                        const newRow = tableBody.insertRow();
+
+                        // Create cells for question_id, title, and difficulty
+                        const questionIdCell = newRow.insertCell(0);
+                        const titleCell = newRow.insertCell(1);
+                        const difficultyCell = newRow.insertCell(2);
+
+                        // Assign values from the item object to the cells, defaulting to 'None' if undefined
+                        questionIdCell.innerHTML = item.question_id || 'None';
+                        titleCell.innerHTML = item.title || 'None';
+                        difficultyCell.innerHTML = item.difficulty || 'None';
+                    });
+
+
+                });
+
+
             };
 
             document.getElementById('clear').onclick = function() {
+
+                clearFilters();
+                console.log("Pressed Clear!");
             };
 
             socket.on('redirect_home', function() {
                 window.location.href = '/';
             });
+
         });
 
 
@@ -205,31 +248,27 @@
 
 
 
-        function applyFilters() {
-            const question_id = document.getElementById('question_id').value;
-            const title = document.getElementById('title').value;
-            const difficulty = document.getElementById('difficulty').value;
-            const language = document.getElementById('language').value;
+        // function applyFilters() {
+        //     const question_id = document.getElementById('question_id').value;
+        //     const title = document.getElementById('title').value;
+        //     const difficulty = document.getElementById('difficulty').value;
 
-            const tableBody = document.getElementById('resultsTable').getElementsByTagName('tbody')[0];
-            const newRow = tableBody.insertRow();
+        //     const tableBody = document.getElementById('resultsTable').getElementsByTagName('tbody')[0];
+        //     const newRow = tableBody.insertRow();
 
-            const questionIdCell = newRow.insertCell(0);
-            const titleCell = newRow.insertCell(1);
-            const difficultyCell = newRow.insertCell(2);
-            const languageCell = newRow.insertCell(3);
+        //     const questionIdCell = newRow.insertCell(0);
+        //     const titleCell = newRow.insertCell(1);
+        //     const difficultyCell = newRow.insertCell(2);
 
-            questionIdCell.innerHTML = question_id || 'None';
-            titleCell.innerHTML = title || 'None';
-            difficultyCell.innerHTML = difficulty || 'None';
-            languageCell.innerHTML = language || 'None';
-        }
+        //     questionIdCell.innerHTML = question_id || 'None';
+        //     titleCell.innerHTML = title || 'None';
+        //     difficultyCell.innerHTML = difficulty || 'None';
+        // }
 
         function clearFilters() {
             document.getElementById('question_id').value = '';
             document.getElementById('title').value = '';
             document.getElementById('difficulty').value = '';
-            document.getElementById('language').value = '';
 
             const tableBody = document.getElementById('resultsTable').getElementsByTagName('tbody')[0];
             tableBody.innerHTML = '';
