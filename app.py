@@ -119,6 +119,12 @@ def admin():
         return render_template('admin.html', username=session['username'])
     return redirect(url_for('login'))
 
+@app.route('/admin_view')
+def admin_view():
+    if 'username' in session:
+        return render_template('admin_view.html')
+    return redirect(url_for('admin'))
+
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     if request.method == 'POST':
@@ -368,6 +374,13 @@ def admin_add_question(data):
     add_question_answer(title, description, difficulty, user_id, language, code)
 
 
+
+@socketio.on('admin-view-questions')
+def admin_view_questions(data):
+    print("-"*50)
+    print(data)
+
+
     
 if __name__ == '__main__':
-    socketio.run(app, debug=True)
+    socketio.run(app, debug=True, host = '0.0.0.0', port = 5000)

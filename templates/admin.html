@@ -101,6 +101,14 @@
 </head>
 <body>
     <div>
+        <form action="{{ url_for('admin_view') }}" method="get">
+            <center>
+                <button type="submit">
+                    View Questions
+                </button>
+            </center>
+            
+        </form>
         <div id="form-container">
             <h1>Add New Question</h1>
             <form id="question-form">
