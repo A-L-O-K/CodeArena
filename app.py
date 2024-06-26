@@ -386,12 +386,30 @@ def admin_view_questions(data):
 
     if question_id or title or difficulty:
 
-        if not question_id:question_id=0
-        if not title:title=""
-        if not difficulty:difficulty=0
+        if not question_id:
+            if title and difficulty:
+                condition = f"title like '%{title}%' and difficulty = {difficulty};"
+            
+            elif title:
+                condition = f"title like '%{title}%';"
+            
+            elif difficulty:
+                condition = f"difficulty = {difficulty};"
+        
+        else:
+            if title and difficulty:
+                condition = f"question_id = {question_id} and title like '%{title}%' and difficulty = {difficulty};"
+            
+            elif title:
+                condition = f"question_id = {question_id} and title like '%{title}%';"
+            
+            elif difficulty:
+                condition = f"question_id = {question_id} and difficulty = {difficulty};"
+            
+            else:
+                condition = f"question_id = {question_id}"
 
-        # condition = f"question_id = {question_id} or title like '%{title}%' or difficulty = {difficulty};"
-        condition = f"difficulty = {difficulty};"
+
         cur.execute(f"SELECT question_id, title, difficulty from questions WHERE {condition}")
     
     else:
